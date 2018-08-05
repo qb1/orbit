@@ -54,6 +54,7 @@ void draw_scale(sf::RenderTarget& target, const GrTransform& tr)
 {
 	auto d = find_scale_distance(tr);
 
+	sf::Color color(0xffffff80);
 	glm::dvec2 center(tr.width_to_res(1024 - 150), tr.height_to_res(750));
 	glm::dvec2 left(center.x - d.second / 2, center.y);
 	glm::dvec2 right(center.x + d.second / 2, center.y);
@@ -61,9 +62,9 @@ void draw_scale(sf::RenderTarget& target, const GrTransform& tr)
 	glm::dvec2 seg_limit(0, tr.height_to_res(5));
 
 	sf::Vertex lines[] = {
-		to_vertex(left), to_vertex(right),
-		to_vertex(left - seg_limit), to_vertex(left + seg_limit),
-		to_vertex(right - seg_limit), to_vertex(right + seg_limit),
+		to_vertex(left, color), to_vertex(right, color),
+		to_vertex(left - seg_limit, color), to_vertex(left + seg_limit, color),
+		to_vertex(right - seg_limit, color), to_vertex(right + seg_limit, color),
 	};
 	target.draw(lines, sizeof(lines) / sizeof(lines[0]), sf::Lines);
 
@@ -78,7 +79,7 @@ void draw_grid(sf::RenderTarget& target, const GrTransform& tr, const glm::dvec2
 {
 	auto d = find_scale_distance(tr);
 
-	sf::Color color(0xffffff50);
+	sf::Color color(0xffffff30);
 	std::vector<sf::Vertex> lines;
 	auto top_left = tr.world_top_left() - origin;
 	int offset = tr.to_screen(std::fmod(top_left.x, d.first));
@@ -127,4 +128,118 @@ void draw_shape(sf::RenderTarget& target, const GrTransform& tr, const std::vect
 	}
 	shape.setFillColor(color);
 	target.draw(shape);
+}
+
+void draw_shape(sf::RenderTarget& target, const GrTransform& tr, const std::vector<glm::dvec2> points, const sf::Color& color)
+{
+	sf::ConvexShape shape(points.size());
+	for (std::size_t i = 0; i < points.size(); ++i) {
+		shape.setPoint(i, to_vector(tr.to_screen(points[i])));
+	}
+	shape.setFillColor(color);
+	target.draw(shape);
+}
+
+void draw_shape(sf::RenderTarget& target, const std::vector<glm::dvec2> points, const sf::Color& color)
+{
+	sf::ConvexShape shape(points.size());
+	for (std::size_t i = 0; i < points.size(); ++i) {
+		shape.setPoint(i, to_vector(points[i]));
+	}
+	shape.setFillColor(color);
+	target.draw(shape);
+}
+
+void draw_lines(sf::RenderTarget& target, const std::vector<std::pair<glm::dvec2, glm::dvec2>> lines, const sf::Color& color)
+{
+	std::vector<sf::Vertex> vertexes;
+	for (const auto& line: lines) {
+		vertexes.push_back(to_vertex(line.first, color));
+		vertexes.push_back(to_vertex(line.second, color));
+	}
+	target.draw(vertexes.data(), vertexes.size(), sf::Lines);
+}
+
+void draw_lines(sf::RenderTarget& target, const GrTransform& tr, const std::vector<glm::dvec2> points, glm::dvec2 world_pos, double scale, double object_rotate, const sf::Color& color)
+{
+	std::vector<sf::Vertex> vertexes;
+	for (std::size_t i = 0; i < points.size(); ++i) {
+		auto p = points[i];
+		p *= scale;
+	 	p = glm::rotate(p, object_rotate - glm::half_pi<double>());
+		vertexes.push_back(to_vertex(tr.to_screen(p + world_pos), color));
+	}
+	target.draw(vertexes.data(), vertexes.size(), sf::LineStrip);
+}
+
+std::optional<glm::dvec2> point_on_rect(const glm::dvec2& position, const sf::FloatRect& rect)
+{
+	double minX = rect.left;
+	double minY = rect.top;
+	double maxX = rect.left + rect.width;
+	double maxY = rect.top + rect.height;
+	double x = position.x;
+	double y = position.y;
+
+	if ((minX <= x && x <= maxX) && (minY <= y && y <= maxY))
+		return std::nullopt;
+
+	double midX = (minX + maxX) / 2;
+	double midY = (minY + maxY) / 2;
+	// if (midX - x == 0) -> m == ±Inf -> minYx/maxYx == x (because value / ±Inf = ±0)
+	double m = (midY - y) / (midX - x);
+
+	if (x <= midX) { // check "left" side
+		double minXy = m * (minX - x) + y;
+		if (minY <= minXy && minXy <= maxY)
+			return glm::dvec2(minX, minXy);
+	}
+
+	if (x >= midX) { // check "right" side
+		double maxXy = m * (maxX - x) + y;
+		if (minY <= maxXy && maxXy <= maxY)
+			return glm::dvec2(maxX, maxXy);
+	}
+
+	if (y <= midY) { // check "top" side
+		double minYx = (minY - y) / m + x;
+		if (minX <= minYx && minYx <= maxX)
+			return glm::dvec2(minYx, minY);
+	}
+
+	if (y >= midY) { // check "bottom" side
+		double maxYx = (maxY - y) / m + x;
+		if (minX <= maxYx && maxYx <= maxX)
+			return glm::dvec2(maxYx, maxY);
+	}
+
+	// edge case when finding midpoint intersection: m = 0/0 = NaN
+	if (x == midX && y == midY) return glm::dvec2(x, y);
+
+	// Should never happen :) If it does, please tell me!
+	throw std::logic_error("Cannot find intersection " + std::to_string(position.x) + " " + std::to_string(position.y));
+}
+
+glm::dvec2 clamp_in_rect(const glm::dvec2& position, const sf::FloatRect& rect)
+{
+	auto ret = point_on_rect(position, rect);
+	if (ret)
+		return ret.value();
+	else
+		return position;
+}
+
+void align_rect_directional(sf::FloatRect& rect, const glm::dvec2& position, const glm::dvec2& direction)
+{
+	rect.left = position.x - rect.width / 2 + direction.x * rect.width;
+	rect.top = position.y - rect.height / 2 + direction.y * rect.height;
+}
+
+bool rect_inside_sphere(const sf::FloatRect& rect, const glm::vec2& position, float radius)
+{
+	if (glm::length(position - glm::vec2(rect.left,              rect.top              )) > radius) return false;
+	if (glm::length(position - glm::vec2(rect.left + rect.width, rect.top              )) > radius) return false;
+	if (glm::length(position - glm::vec2(rect.left,              rect.top + rect.height)) > radius) return false;
+	if (glm::length(position - glm::vec2(rect.left + rect.width, rect.top + rect.height)) > radius) return false;
+	return true;
 }

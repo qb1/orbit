@@ -11,18 +11,9 @@ public:
 	GrCamera(int window_width, int window_height)
 	: window_width_(window_width), window_height_(window_height), scale(1.0) {}
 
-	void center_on(glm::dvec2 center) {
-		center_ = center;
-	}
-
-	GrTransform begin()
+	GrTransform transform()
 	{
-		// TODO: load std matrix, find the right function
-		return GrTransform(center_ + position, scale, window_width_, window_height_);
-	}
-
-	void end()
-	{
+		return GrTransform(origin + position, scale, window_width_, window_height_);
 	}
 
 	void set_viewable_width(double width) {
@@ -31,6 +22,10 @@ public:
 
 	void set_viewable_height(double height) {
 		scale = static_cast<double>(window_height_) / height;
+	}
+
+	void set_viewable_distance(double distance) {
+		scale = static_cast<double>(std::min(window_width_, window_height_)) / distance;
 	}
 
 	void update_window(int window_width, int window_height) {
@@ -46,11 +41,11 @@ public:
 		position.y -= offset.y / scale;
 	}
 
-	glm::dvec2 position;
+	glm::dvec2 origin;
 	double scale;
 
 protected:
-	glm::dvec2 center_;
 	int window_width_;
 	int window_height_;
+	glm::dvec2 position;
 };

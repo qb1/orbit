@@ -20,7 +20,7 @@ public:
 
 	const std::string& name() const { return name_; }
 	const sf::Color& color() const { return color_; }
-	virtual double get_visu_height() const = 0;
+	virtual double longest_distance() const = 0;
 
 protected:
 	bool outside_view(const sf::RenderTarget& target, const GrTransform& tr) const;
@@ -41,7 +41,7 @@ public:
 	GrPlanet(const std::string& name, const sf::Color& color, double radius);
 	virtual ~GrPlanet();
 
-	double get_visu_height() const override { return radius_*2; };
+	double longest_distance() const override { return radius_*2; };
 
 protected:
 	void do_draw(sf::RenderTarget& target, const GrTransform& tr) const override;
@@ -54,7 +54,7 @@ public:
 	GrSpaceship(const sf::Color& color, double width, double height);
 	virtual ~GrSpaceship();
 
-	double get_visu_height() const override { return height_; }
+	double longest_distance() const override { return height_; }
 
 	void set_burn(bool burn) { burn_ = burn; }
 

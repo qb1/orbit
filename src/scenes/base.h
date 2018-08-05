@@ -2,6 +2,7 @@
 
 #include <SFML/Graphics/RenderTarget.hpp>
 #include <SFML/Window/Event.hpp>
+#include <graphics/transform.h>
 
 class SceneBase
 {
@@ -10,7 +11,7 @@ public:
 	virtual ~SceneBase() = default;
 
 	virtual void update(float elapsed) {}
-	virtual void draw(sf::RenderTarget& target) {}
+	virtual void draw(sf::RenderTarget& target, const GrTransform& tr) {}
 
 	virtual void set_visible(bool) = 0;
 	virtual void set_takes_input(bool) = 0;

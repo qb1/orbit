@@ -1,9 +1,9 @@
 #pragma once
 
+#include <cstdint>
 #include <string>
-#include <experimental/optional>
 
-#include <glm/vec2.hpp>
+// #include <glm/vec2.hpp>
 // #include <SFML/Graphics/Rect.hpp>
 
 // sf::Rect getBitmapStringBoundingBox(std::string text);

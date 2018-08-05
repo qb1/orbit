@@ -21,16 +21,35 @@ add_executable(orbit
 	src/common/utils.cpp
 	src/common/computations.cpp
 
+	src/simulation/universe.cpp
+
 	src/graphics/fonts.cpp
 	src/graphics/transform.cpp
 	src/graphics/shapes_routines.cpp
 	src/graphics/misc_draw.cpp
 	src/graphics/object.cpp
 
+	src/scenes/scene_manager.cpp
 	src/scenes/universe.cpp
 
 	${IMGUI_SOURCES} ${IMGUI_SFML_SOURCES}
 )
+
+option(USE_IWYU "Whether to apply include-what-you-use" OFF)
+
+if (USE_IWYU)
+	set(IWYU_PATH "iwyu")
+	set(IWYU_PATH_AND_OPTIONS
+		${IWYU_PATH}
+		-Xiwyu
+		--mapping_file=${PROJECT_SOURCE_DIR}/iwyu-mapping.imp
+	)
+else()
+	set(IWYU_PATH_AND_OPTIONS "")
+endif()
+
+set_property(TARGET orbit PROPERTY CXX_INCLUDE_WHAT_YOU_USE ${IWYU_PATH_AND_OPTIONS})
+
 
 target_compile_definitions(orbit PRIVATE -DIMGUI_DISABLE_INCLUDE_IMCONFIG_H)
 target_compile_definitions(orbit PRIVATE -DIMGUI_USER_CONFIG="custom-imconfig.h")

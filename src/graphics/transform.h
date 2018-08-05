@@ -9,6 +9,8 @@ class GrTransform {
 public:
 	GrTransform(glm::dvec2 position, double scale, int window_width, int window_height);
 
+	sf::FloatRect screen_view() const { return sf::FloatRect(0, 0, window_width_, window_height_); }
+
     glm::dvec2 world_top_left() const;
     glm::dvec2 world_top_right() const;
     glm::dvec2 world_bottom_right() const;

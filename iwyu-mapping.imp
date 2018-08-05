@@ -1,0 +1,7 @@
+[
+  { include: ["<bits/stdint-uintn.h>", "private", "<cstdint>", "public"] },
+
+  { include: ["@<SFML/Graphics/.*>", "private", "<SFML/Graphics.hpp>", "public"] },
+  { include: ["@<SFML/Window/.*>", "private", "<SFML/Window.hpp>", "public"] },
+  { include: ["@<SFML/System/.*>", "private", "<SFML/System.hpp>", "public"] },
+]

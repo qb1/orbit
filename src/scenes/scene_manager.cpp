@@ -1,0 +1,184 @@
+#include "scene_manager.h"
+
+#include <glm/gtx/rotate_vector.hpp>
+
+#include <simulation/object.h>
+#include <simulation/universe.h>
+
+#include <graphics/camera.h>
+#include <graphics/misc_draw.h>
+#include <graphics/object.h>
+
+#include <common/universe_definitions.h>
+
+SceneManager::~SceneManager() = default;
+
+SceneManager::SceneManager(const sf::RenderTarget& target)
+  : scene_universe(target)
+  , scenes({ &scene_universe })
+  , camera(target.getSize().x, target.getSize().y)
+  , ship_accel_(0.0)
+  , simu_running_(false)
+  , simu_speed_(1)
+{
+	init_simulation_randomize(simulation_, solar_system_definition);
+
+	for (const auto& obj: solar_system_definition) {
+		auto gr_planet = std::make_unique<GrPlanet>(obj.name, obj.color, obj.radius);
+		std::optional<SimUniverse::Collection::const_iterator> primary = simulation_.objects().find(obj.primary_name);
+		if (primary.value() == simulation_.objects().end())
+			primary = std::nullopt;
+
+		scene_universe.add_object(simulation_.objects().find(obj.name), primary, std::move(gr_planet));
+	}
+
+	const auto& earth = simulation_.objects().find("Earth")->second;
+
+	double ship_radius = 10.0;
+	double ship_angle = 0.0;
+	simulation_.add_object(
+	  "Ship", SimObject(earth.position() + glm::dvec2(earth.radius() + ship_radius + 200, 0.0),
+	                    earth.velocity(), 30.0e3, ship_radius, ship_angle, 0.0));
+	ship_simu_ = simulation_.find("Ship");
+	ship_simu_->second.set_can_collide(true);
+	auto ship_visu =std::make_unique<GrSpaceship>(sf::Color::Red, 8, ship_radius * 2);
+	ship_visu_ = ship_visu.get();
+	scene_universe.add_object(ship_simu_, std::nullopt, std::move(ship_visu));
+
+	center_camera_on = simulation_.objects().find("Ship");
+	camera.set_viewable_distance(scene_universe.find(center_camera_on.value()).longest_distance() * 1.2);
+
+}
+
+void SceneManager::update(float elapsed)
+{
+	glm::dvec2 acc(1.0, 0.0);
+	acc = glm::rotate(acc, ship_simu_->second.angle());
+	acc *= ship_accel_;
+	ship_simu_->second.set_inherent_acceleration(acc);
+
+	if (simu_running_) {
+		int speed = std::min(simu_speed_, 600);
+		for (int i=0; i < simu_speed_; i += speed) {
+			simulation_.step(1.0 / 60.0 * speed);
+		}
+		for (int i=0; i < simu_speed_ % 600; i++) {
+			simulation_.step(1.0 / 60.0);
+		}
+	}
+
+	for (auto scene : scenes) {
+		scene->update(elapsed);
+	}
+
+	if (center_camera_on) {
+		camera.origin = center_camera_on.value()->second.position();
+	}
+}
+
+void SceneManager::draw(sf::RenderTarget& target)
+{
+	target.clear(sf::Color(15, 15, 15));
+
+    auto tr = camera.transform();
+
+    draw_grid(target, tr, camera.origin);
+
+    for (auto scene : scenes) {
+		scene->draw(target, tr);
+	}
+}
+
+void SceneManager::handle_window_resize(int w, int h)
+{
+	camera.update_window(w, h);
+
+	for (auto scene : scenes) {
+		scene->handle_window_resize(w, h);
+	}
+}
+
+void SceneManager::handle_key(bool pressed, const sf::Event::KeyEvent& event)
+{
+	const double accel_step = 1.0;
+	const double rotation_step = glm::two_pi<double>() / 360.0 * 5.0;
+
+	if (pressed) {
+		using Key = sf::Keyboard::Key;
+		switch(event.code) {
+			case Key::Space:
+				simu_running_ = !simu_running_;
+				break;
+			case Key::Add:
+				simu_speed_ *= 2;
+				break;
+			case Key::Subtract:
+				simu_speed_ /= 2;
+				break;
+			case Key::Up:
+				ship_accel_ += accel_step;
+				break;
+			case Key::Down:
+				ship_accel_ -= accel_step;
+				break;
+			case Key::Left:
+				ship_simu_->second.set_angle(ship_simu_->second.angle() - rotation_step);
+				ship_simu_->second.set_angular_velocity(0.0);
+				break;
+			case Key::Right:
+				ship_simu_->second.set_angle(ship_simu_->second.angle() + rotation_step);
+				ship_simu_->second.set_angular_velocity(0.0);
+				break;
+			default:
+				break;
+		}
+		simu_speed_ = std::min(simu_speed_, 1024 * 1024);
+		simu_speed_ = std::max(simu_speed_, 1);
+
+		ship_accel_ = std::min(ship_accel_, 30.0);
+		ship_accel_ = std::max(0.0, ship_accel_);
+		ship_visu_->set_burn(ship_accel_ > 0);
+	}
+
+	for (auto scene : scenes) {
+		scene->handle_key(pressed, event);
+	}
+}
+
+void SceneManager::handle_click(bool pressed, const sf::Event::MouseButtonEvent& event)
+{
+	if (event.button != sf::Mouse::Button::Left)
+		return;
+
+	if (pressed) {
+		mouse_drag_ = glm::dvec2(event.x, event.y);
+	} else {
+		mouse_drag_.reset();
+	}
+
+	for (auto scene : scenes) {
+		scene->handle_click(pressed, event);
+	}
+}
+
+void SceneManager::handle_mouse_move(const sf::Event::MouseMoveEvent& event)
+{
+	if (mouse_drag_) {
+		glm::dvec2 new_vec(event.x, event.y);
+		camera.translate_screen(new_vec - mouse_drag_.value());
+		mouse_drag_ = new_vec;
+	}
+
+	for (auto scene : scenes) {
+		scene->handle_mouse_move(event);
+	}
+}
+
+void SceneManager::handle_mouse_wheel(const sf::Event::MouseWheelScrollEvent& event)
+{
+	camera.scale += camera.scale * 0.1 * event.delta;
+
+	for (auto scene : scenes) {
+		scene->handle_mouse_wheel(event);
+	}
+}

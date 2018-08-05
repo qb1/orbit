@@ -82,6 +82,7 @@ std::vector<glm::dvec2> circle_points(glm::dvec2 center, double radius, double a
 		glm::dvec2 point(glm::cos(angle) * radius, glm::sin(angle) * radius);
 		points.push_back(point + center);
 	}
+	points.push_back(center);
 	return points;
 }
 

@@ -1,25 +1,51 @@
-#include <SFML/Graphics.hpp>
-#include <SFML/Window.hpp>
-
-#include <iostream>
-#include <string>
 #include <vector>
 
-#include <imgui.h>
+#include <SFML/Graphics.hpp>
+#include <SFML/Window.hpp>
+#include <SFML/System.hpp>
+
+// #include <imgui.h>
 #include <imgui-SFML.h>
 
 #include <graphics/fonts.h>
-#include <scenes/base.h>
-#include <scenes/universe.h>
+#include <scenes/scene_manager.h>
 
 using namespace std;
+
+// void add(const UniverseDefinition& definition)
+// {
+//     for (const auto& obj : definition) {
+//         glm::dvec2 position = glm::dvec2(obj.perihelion, 0.0);
+//         glm::dvec2 velocity = glm::dvec2(0.0, - obj.velocity); // Counter clock-wise
+//         Object *primary = nullptr;
+
+//         double orbit_angle = static_cast<double>(std::rand()) / static_cast<double>(RAND_MAX) * glm::two_pi<double>();
+//         position = glm::rotate(position, orbit_angle);
+//         velocity = glm::rotate(velocity, orbit_angle);
+
+//         double object_angle = static_cast<double>(std::rand()) / static_cast<double>(RAND_MAX) * glm::two_pi<double>();
+
+//         if (obj.primary_name.size()) {
+//             primary = find(obj.primary_name);
+
+//             position += primary->simu->position();
+//             velocity += primary->simu->velocity();
+//         }
+
+//         add(std::make_unique<GrPlanet>(obj.name, obj.color, obj.radius),
+//                 SimObject(position, velocity, obj.mass, obj.radius, object_angle,
+//                           -glm::two_pi<double>() / obj.rotation_period),
+//                 primary);
+//     }
+// }
 
 int main()
 {
 	sf::ContextSettings settings;
-	// settings.antialiasingLevel = 4;
+	settings.antialiasingLevel = 4;
 	sf::RenderWindow window(sf::VideoMode(1024, 768), "Orbit", sf::Style::Default, settings);
 	window.setVerticalSyncEnabled(true);
+    window.setFramerateLimit(60);
 
     ImGui::SFML::Init(window, false);
     // ImGui::GetIO().Fonts->
@@ -27,10 +53,7 @@ int main()
 
     gr_initialize_fonts();
 
-    std::vector<SceneBase*> scenes;
-    SceneUniverse scene_universe(window);
-
-    scenes.push_back(&scene_universe);
+    SceneManager scene_manager(window);
 
     sf::Clock deltaClock;
     while (window.isOpen())
@@ -54,38 +77,30 @@ int main()
 
             // Handle for scenes
             if (event.type == sf::Event::KeyPressed or event.type == sf::Event::KeyReleased) {
-                for (auto& scene: scenes)
-                    scene->handle_key(event.type == sf::Event::KeyPressed, event.key);
+                scene_manager.handle_key(event.type == sf::Event::KeyPressed, event.key);
             }
             if (event.type == sf::Event::MouseButtonPressed or event.type == sf::Event::MouseButtonReleased) {
-                for (auto& scene: scenes)
-                    scene->handle_click(event.type == sf::Event::MouseButtonPressed, event.mouseButton);
+                scene_manager.handle_click(event.type == sf::Event::MouseButtonPressed, event.mouseButton);
             }
             if (event.type == sf::Event::MouseWheelScrolled) {
-                for (auto& scene: scenes)
-                    scene->handle_mouse_wheel(event.mouseWheelScroll);
+                scene_manager.handle_mouse_wheel(event.mouseWheelScroll);
             }
             if (event.type == sf::Event::MouseMoved) {
-                for (auto& scene: scenes)
-                    scene->handle_mouse_move(event.mouseMove);
+                scene_manager.handle_mouse_move(event.mouseMove);
             }
             if (event.type == sf::Event::Resized) {
                 auto size = window.getView().getSize();
-                for (auto& scene: scenes)
-                    scene->handle_window_resize(size.x, size.y);
+                scene_manager.handle_window_resize(size.x, size.y);
             }
         }
 
         // Update
         ImGui::SFML::Update(window, deltaClock.restart());
         float elapsed = deltaClock.getElapsedTime().asSeconds();
-        for (auto& scene: scenes)
-            scene->update(elapsed);
+        scene_manager.update(elapsed);
 
         // Render
-        window.clear();
-        for (auto& scene: scenes)
-            scene->draw(window);
+        scene_manager.draw(window);
         ImGui::SFML::Render(window); // UI always on top
 
         window.display();

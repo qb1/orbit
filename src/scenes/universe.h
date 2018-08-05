@@ -1,12 +1,16 @@
 #pragma once
 
 #include <optional>
+#include <cstdint>
+#include <deque>
+#include <optional>
 
 #include <glm/vec2.hpp>
 
-#include <graphics/camera.h>
-
-#include "base.h"
+#include <common/universe_definitions.h>
+#include <graphics/object.h>
+#include <simulation/universe.h>
+#include <scenes/base.h>
 
 class SceneUniverse : public SceneBase
 {
@@ -15,22 +19,30 @@ public:
 	virtual ~SceneUniverse();
 
 	virtual void update(float elapsed);
-	virtual void draw(sf::RenderTarget& target);
+	virtual void draw(sf::RenderTarget& target, const GrTransform& tr);
 
 	virtual void set_visible(bool visible) { visible_ = visible; }
 	virtual void set_takes_input(bool takes_input) { takes_input_ = takes_input; }
 
-	// Events
-	virtual void handle_window_resize(int w, int h);
-	virtual void handle_key(bool pressed, const sf::Event::KeyEvent& event);
-	virtual void handle_click(bool pressed, const sf::Event::MouseButtonEvent& event);
-	virtual void handle_mouse_move(const sf::Event::MouseMoveEvent& event);
-	virtual void handle_mouse_wheel(const sf::Event::MouseWheelScrollEvent& event);
+	void add_object(SimUniverse::Collection::const_iterator sim_object,
+	                std::optional<SimUniverse::Collection::const_iterator> prim_sim_object,
+	                std::unique_ptr<GrObject> gr_object);
+
+	const GrObject& find(SimUniverse::Collection::const_iterator simu) const;
 
 private:
-	GrCamera camera;
+	using GrObjectCollection = std::deque<std::unique_ptr<GrObject>>;
+	GrObjectCollection gr_objects_;
 
-	std::optional<glm::dvec2> mouse_drag_;
+	struct ObjectLink
+	{
+		SimUniverse::Collection::const_iterator simu;
+		std::optional<SimUniverse::Collection::const_iterator> primary_simu;
+		GrObjectCollection::iterator visu;
+	};
+
+	std::vector<ObjectLink> object_links_;
+
 	bool takes_input_;
 	bool visible_;
 };

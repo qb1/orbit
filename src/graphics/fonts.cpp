@@ -22,5 +22,7 @@ const FontList& GrFonts()
 
 void gr_initialize_fonts()
 {
-	load_font("ressources/fonts/FiraMono-Regular.otf", static_fonts.text);
+	load_font("ressources/fonts/timeburnernormal.ttf", static_fonts.text);
+	// load_font("ressources/fonts/rajdhani-light.ttf", static_fonts.text);
+	// load_font("ressources/fonts/FiraMono-Regular.otf", static_fonts.text);
 }

@@ -2,77 +2,59 @@
 
 #include <simulation/object.h>
 #include <simulation/universe.h>
-#include <simulation/universe_definitions.h>
 
 #include <graphics/camera.h>
 #include <graphics/misc_draw.h>
 #include <graphics/object.h>
 
+#include <common/universe_definitions.h>
 
 SceneUniverse::~SceneUniverse() = default;
 
 SceneUniverse::SceneUniverse(const sf::RenderTarget& target)
-    : camera(target.getSize().x, target.getSize().y)
-    , visible_(true)
+    : visible_(true)
     , takes_input_(true)
 {
-	camera.center_on(glm::dvec2(0.0, 0.0));
 }
 
 void SceneUniverse::update(float elapsed)
 {
+	for (auto& link: object_links_) {
+		(*link.visu)->update(link.simu->second.position(), link.simu->second.angle());
+	}
 }
 
-void SceneUniverse::draw(sf::RenderTarget& target)
+void SceneUniverse::draw(sf::RenderTarget& target, const GrTransform& tr)
 {
-    // ---------- Test bed
-    auto tr = camera.begin();
+    // Draw things in inverse order to keep most important on top
+	for (auto it = object_links_.crbegin(); it != object_links_.rend(); ++it) {
+		if (not it->primary_simu)
+			continue;
+		draw_orbit(target, tr, it->primary_simu.value()->second, it->simu->second, (*it->visu)->color());
+	}
+	for (auto it = object_links_.crbegin(); it != object_links_.rend(); ++it) {
+		(*it->visu)->draw(target, tr);
+	}
+	for (auto it = object_links_.crbegin(); it != object_links_.rend(); ++it) {
+		(*it->visu)->draw_label(target, tr);
+	}
 
     draw_scale(target, tr);
-    draw_grid(target, tr, glm::dvec2(0.0, 0.0));
-
-    // ---------- Test bed
 }
 
-void SceneUniverse::handle_window_resize(int w, int h)
+void SceneUniverse::add_object(SimUniverse::Collection::const_iterator sim_object,
+                               std::optional<SimUniverse::Collection::const_iterator> prim_sim_object,
+                               std::unique_ptr<GrObject> gr_object)
 {
-	camera.update_window(w, h);
+	gr_objects_.push_back(std::move(gr_object));
+	object_links_.push_back({sim_object, prim_sim_object, gr_objects_.end() - 1});
 }
 
-void SceneUniverse::handle_key(bool pressed, const sf::Event::KeyEvent& key)
+const GrObject& SceneUniverse::find(SimUniverse::Collection::const_iterator simu) const
 {
-}
-
-void SceneUniverse::handle_click(bool pressed, const sf::Event::MouseButtonEvent& event)
-{
-	if (not takes_input_)
-		return;
-	if (event.button != sf::Mouse::Button::Left)
-		return;
-
-	if (pressed) {
-		mouse_drag_ = glm::dvec2(event.x, event.y);
-	} else {
-		mouse_drag_.reset();
+	for (const auto& link: object_links_) {
+		if (link.simu == simu)
+			return **link.visu;
 	}
-}
-
-void SceneUniverse::handle_mouse_move(const sf::Event::MouseMoveEvent& event)
-{
-	if (not takes_input_)
-		return;
-
-	if (mouse_drag_) {
-		glm::dvec2 new_vec(event.x, event.y);
-		camera.translate_screen(new_vec - mouse_drag_.value());
-		mouse_drag_ = new_vec;
-	}
-}
-
-void SceneUniverse::handle_mouse_wheel(const sf::Event::MouseWheelScrollEvent& event)
-{
-	if (not takes_input_)
-		return;
-
-	camera.scale += camera.scale * 0.1 * event.delta;
+	throw std::runtime_error("Cannot find matching GrObject for SimObject");
 }
