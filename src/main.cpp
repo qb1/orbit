@@ -23,6 +23,8 @@ int main()
 	// ImGui::GetIO().Fonts->
 	ImGui::SFML::UpdateFontTexture();
 
+	ImGui::GetStyle().Alpha = 0.8;
+
 	gr_initialize_fonts();
 
 	SceneManager scene_manager(window);
@@ -46,18 +48,24 @@ int main()
 			}
 
 			// Handle for scenes
-			if (event.type == sf::Event::KeyPressed or event.type == sf::Event::KeyReleased) {
-				scene_manager.handle_key(event.type == sf::Event::KeyPressed, event.key);
+			if (not ImGui::GetIO().WantCaptureMouse) {
+				if (event.type == sf::Event::MouseWheelScrolled) {
+					scene_manager.handle_mouse_wheel(event.mouseWheelScroll);
+				}
+				if (event.type == sf::Event::MouseMoved) {
+					scene_manager.handle_mouse_move(event.mouseMove);
+				}
+				if (event.type == sf::Event::MouseButtonPressed or event.type == sf::Event::MouseButtonReleased) {
+					scene_manager.handle_click(event.type == sf::Event::MouseButtonPressed, event.mouseButton);
+				}
 			}
-			if (event.type == sf::Event::MouseButtonPressed or event.type == sf::Event::MouseButtonReleased) {
-				scene_manager.handle_click(event.type == sf::Event::MouseButtonPressed, event.mouseButton);
+
+			if (not ImGui::GetIO().WantCaptureKeyboard) {
+				if (event.type == sf::Event::KeyPressed or event.type == sf::Event::KeyReleased) {
+					scene_manager.handle_key(event.type == sf::Event::KeyPressed, event.key);
+				}
 			}
-			if (event.type == sf::Event::MouseWheelScrolled) {
-				scene_manager.handle_mouse_wheel(event.mouseWheelScroll);
-			}
-			if (event.type == sf::Event::MouseMoved) {
-				scene_manager.handle_mouse_move(event.mouseMove);
-			}
+
 			if (event.type == sf::Event::Resized) {
 				auto size = window.getView().getSize();
 				scene_manager.handle_window_resize(size.x, size.y);
