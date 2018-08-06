@@ -10,6 +10,7 @@ class ObjectLinkCollection
 {
 public:
 	struct ObjectLink {
+		const std::string& name() const { return simu_->first; }
 		const SimObject& simu() const { return simu_->second; }
 		const GrObject& visu() const { return *visu_; }
 		GrObject& visu() { return *visu_; }

@@ -17,10 +17,10 @@
 SceneManager::~SceneManager() = default;
 
 SceneManager::SceneManager(const sf::RenderTarget& target)
-  : scene_universe(&objects_links_)
-  , scene_center_on()
-  , scenes({ &scene_universe, &scene_center_on })
-  , camera(target.getSize().x, target.getSize().y)
+  : scene_universe_(&objects_links_)
+  , scene_center_on_(&objects_links_, &camera_)
+  , scenes_({ &scene_universe_, &scene_center_on_ })
+  , camera_(target.getSize().x, target.getSize().y)
   , ship_accel_(0.0)
   , simu_running_(false)
   , simu_speed_(1)
@@ -52,8 +52,7 @@ SceneManager::SceneManager(const sf::RenderTarget& target)
 	objects_links_.add({ship_simu_, std::nullopt, ship_visu_});
 	visus_.push_back(std::move(ship_visu));
 
-	center_camera_on = objects_links_.find("Earth").simu_;
-	camera.set_viewable_distance(objects_links_.find(center_camera_on.value()).visu().longest_distance() * 1.2);
+	scene_center_on_.center_camera_on("Ship");
 }
 
 void SceneManager::update(float elapsed)
@@ -77,12 +76,8 @@ void SceneManager::update(float elapsed)
 		link.visu().update(link.simu().position(), link.simu().angle());
 	}
 
-	for (auto scene : scenes) {
+	for (auto scene : scenes_) {
 		scene->update(elapsed);
-	}
-
-	if (center_camera_on) {
-		camera.origin = center_camera_on.value()->second.position();
 	}
 }
 
@@ -90,11 +85,11 @@ void SceneManager::draw(sf::RenderTarget& target)
 {
 	target.clear(sf::Color(15, 15, 15));
 
-    auto tr = camera.transform();
+    auto tr = camera_.transform();
 
-    draw_grid(target, tr, camera.origin);
+    draw_grid(target, tr, camera_.origin);
 
-    for (auto scene : scenes) {
+    for (auto scene : scenes_) {
 		scene->draw(target, tr);
 	}
 
@@ -116,9 +111,9 @@ void SceneManager::draw(sf::RenderTarget& target)
 
 void SceneManager::handle_window_resize(int w, int h)
 {
-	camera.update_window(w, h);
+	camera_.update_window(w, h);
 
-	for (auto scene : scenes) {
+	for (auto scene : scenes_) {
 		scene->handle_window_resize(w, h);
 	}
 }
@@ -165,7 +160,7 @@ void SceneManager::handle_key(bool pressed, const sf::Event::KeyEvent& event)
 		ship_visu_->set_burn(ship_accel_ > 0);
 	}
 
-	for (auto scene : scenes) {
+	for (auto scene : scenes_) {
 		scene->handle_key(pressed, event);
 	}
 }
@@ -181,7 +176,7 @@ void SceneManager::handle_click(bool pressed, const sf::Event::MouseButtonEvent&
 		mouse_drag_.reset();
 	}
 
-	for (auto scene : scenes) {
+	for (auto scene : scenes_) {
 		scene->handle_click(pressed, event);
 	}
 }
@@ -190,20 +185,20 @@ void SceneManager::handle_mouse_move(const sf::Event::MouseMoveEvent& event)
 {
 	if (mouse_drag_) {
 		glm::dvec2 new_vec(event.x, event.y);
-		camera.translate_screen(new_vec - mouse_drag_.value());
+		camera_.translate_screen(new_vec - mouse_drag_.value());
 		mouse_drag_ = new_vec;
 	}
 
-	for (auto scene : scenes) {
+	for (auto scene : scenes_) {
 		scene->handle_mouse_move(event);
 	}
 }
 
 void SceneManager::handle_mouse_wheel(const sf::Event::MouseWheelScrollEvent& event)
 {
-	camera.scale += camera.scale * 0.1 * event.delta;
+	camera_.scale += camera_.scale * 0.1 * event.delta;
 
-	for (auto scene : scenes) {
+	for (auto scene : scenes_) {
 		scene->handle_mouse_wheel(event);
 	}
 }
