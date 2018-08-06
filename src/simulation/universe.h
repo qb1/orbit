@@ -21,7 +21,7 @@ public:
 	double date() { return date_; }
 private:
 	Collection objects_;
-	double date_;
+	double date_ = 0.0;
 };
 
 void init_simulation_randomize(SimUniverse& simulation, const UniverseDefinition& definition);
