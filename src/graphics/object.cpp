@@ -139,7 +139,7 @@ void GrPlanet::do_draw(sf::RenderTarget& target, const GrTransform& tr) const
 	auto scr_pos = tr.to_screen(position_);
 	auto scr_radius = tr.to_screen(radius_);
 
-	auto points = screen_circle_points(position_, radius_, 200, tr);
+	auto points = screen_circle_points(position_, radius_, 50, tr);
 	draw_shape(target, tr, points, color_);
 
 	auto darker_color = sf::Color(0x00000020);
