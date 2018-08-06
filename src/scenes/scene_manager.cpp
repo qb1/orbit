@@ -17,7 +17,7 @@
 SceneManager::~SceneManager() = default;
 
 SceneManager::SceneManager(const sf::RenderTarget& target)
-  : scene_universe(target)
+  : scene_universe(&objects_links_)
   , scene_center_on()
   , scenes({ &scene_universe, &scene_center_on })
   , camera(target.getSize().x, target.getSize().y)
@@ -33,10 +33,11 @@ SceneManager::SceneManager(const sf::RenderTarget& target)
 		if (primary.value() == simulation_.objects().end())
 			primary = std::nullopt;
 
-		scene_universe.add_object(simulation_.objects().find(obj.name), primary, std::move(gr_planet));
+		objects_links_.add({simulation_.objects().find(obj.name), primary, gr_planet.get()});
+		visus_.push_back(std::move(gr_planet));
 	}
 
-	const auto& earth = simulation_.objects().find("Earth")->second;
+	const auto& earth = objects_links_.find("Earth").simu();
 
 	double ship_radius = 10.0;
 	double ship_angle = 0.0;
@@ -45,12 +46,14 @@ SceneManager::SceneManager(const sf::RenderTarget& target)
 	                    earth.velocity(), 30.0e3, ship_radius, ship_angle, 0.0));
 	ship_simu_ = simulation_.find("Ship");
 	ship_simu_->second.set_can_collide(true);
+
 	auto ship_visu =std::make_unique<GrSpaceship>(sf::Color::Red, 8, ship_radius * 2);
 	ship_visu_ = ship_visu.get();
-	scene_universe.add_object(ship_simu_, std::nullopt, std::move(ship_visu));
+	objects_links_.add({ship_simu_, std::nullopt, ship_visu_});
+	visus_.push_back(std::move(ship_visu));
 
-	center_camera_on = simulation_.objects().find("Ship");
-	camera.set_viewable_distance(scene_universe.find(center_camera_on.value()).longest_distance() * 1.2);
+	center_camera_on = objects_links_.find("Earth").simu_;
+	camera.set_viewable_distance(objects_links_.find(center_camera_on.value()).visu().longest_distance() * 1.2);
 }
 
 void SceneManager::update(float elapsed)
@@ -68,6 +71,10 @@ void SceneManager::update(float elapsed)
 		for (int i=0; i < simu_speed_ % 600; i++) {
 			simulation_.step(1.0 / 60.0);
 		}
+	}
+
+	for (auto& link: objects_links_) {
+		link.visu().update(link.simu().position(), link.simu().angle());
 	}
 
 	for (auto scene : scenes) {

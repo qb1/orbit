@@ -2,14 +2,16 @@
 
 #include <optional>
 #include <cstdint>
+#include <memory>
+#include <vector>
 
 #include <glm/vec2.hpp>
 
 #include <graphics/camera.h>
 
+#include "object_link.h"
 #include "universe.h"
 #include "center_on.h"
-
 
 class SceneManager
 {
@@ -32,7 +34,10 @@ private:
 	SceneCenterOn scene_center_on;
 	std::vector<SceneBase*> scenes;
 
+
 	SimUniverse simulation_;
+	std::vector<std::unique_ptr<GrObject>> visus_;
+	ObjectLinkCollection objects_links_;
 
 	GrCamera camera;
 	std::optional<SimUniverse::Collection::const_iterator> center_camera_on;
