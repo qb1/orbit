@@ -121,7 +121,9 @@ std::string distance_to_string(double distance, int precision)
 
 	s << std::defaultfloat;
 
-	if (distance < 1.0) {
+	if (distance == 0.0) {
+		unit = "m";
+	} else if (distance < 1.0) {
 		unit = "cm";
 		distance *= 100.0;
 	} else if (distance < 1.0e3) {

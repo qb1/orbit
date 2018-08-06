@@ -4,7 +4,8 @@
 
 struct FontList
 {
-	sf::Font text;
+	sf::Font label;
+	sf::Font info;
 };
 
 const FontList& GrFonts();

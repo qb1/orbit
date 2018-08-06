@@ -68,7 +68,7 @@ void draw_scale(sf::RenderTarget& target, const GrTransform& tr)
 	};
 	target.draw(lines, sizeof(lines) / sizeof(lines[0]), sf::Lines);
 
-	sf::Text text(distance_to_string(d.first, 1), GrFonts().text, tr.height_to_res(10));
+	sf::Text text(distance_to_string(d.first, 1), GrFonts().label, tr.height_to_res(10));
 	auto rect = text.getLocalBounds();
 	text.setPosition(center.x, center.y);
 	text.setPosition(center.x - rect.width / 2, center.y - rect.height * 2);

@@ -8,6 +8,8 @@
 #include <graphics/camera.h>
 
 #include "universe.h"
+#include "center_on.h"
+
 
 class SceneManager
 {
@@ -27,6 +29,7 @@ public:
 
 private:
 	SceneUniverse scene_universe;
+	SceneCenterOn scene_center_on;
 	std::vector<SceneBase*> scenes;
 
 	SimUniverse simulation_;

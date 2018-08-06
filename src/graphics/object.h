@@ -69,5 +69,5 @@ protected:
 	float height_;
 	const std::vector<glm::dvec2> ship_points_;
 	const std::vector<glm::dvec2> plume_points_;
-	bool burn_;
+	bool burn_ = false;
 };

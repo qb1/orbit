@@ -61,7 +61,7 @@ void GrObject::do_draw_label(sf::RenderTarget& target, const GrTransform& tr) co
 
 	auto view = tr.screen_view();
 	auto view_center = glm::dvec2(view.left + view.width / 2, view.top + view.height / 2);
-	auto text = sf::Text(name_, GrFonts().text, tr.height_to_res(13));
+	auto text = sf::Text(name_, GrFonts().label, tr.height_to_res(13));
 	auto rect = text.getLocalBounds();
 	rect.width += 2 * margin;
 	rect.height += 2 * margin;

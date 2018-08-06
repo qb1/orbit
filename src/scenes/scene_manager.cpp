@@ -1,6 +1,7 @@
 #include "scene_manager.h"
 
 #include <glm/gtx/rotate_vector.hpp>
+#include <SFML/Graphics/RectangleShape.hpp>
 
 #include <simulation/object.h>
 #include <simulation/universe.h>
@@ -8,14 +9,17 @@
 #include <graphics/camera.h>
 #include <graphics/misc_draw.h>
 #include <graphics/object.h>
+#include <graphics/fonts.h>
 
 #include <common/universe_definitions.h>
+#include <common/utils.h>
 
 SceneManager::~SceneManager() = default;
 
 SceneManager::SceneManager(const sf::RenderTarget& target)
   : scene_universe(target)
-  , scenes({ &scene_universe })
+  , scene_center_on()
+  , scenes({ &scene_universe, &scene_center_on })
   , camera(target.getSize().x, target.getSize().y)
   , ship_accel_(0.0)
   , simu_running_(false)
@@ -47,7 +51,6 @@ SceneManager::SceneManager(const sf::RenderTarget& target)
 
 	center_camera_on = simulation_.objects().find("Ship");
 	camera.set_viewable_distance(scene_universe.find(center_camera_on.value()).longest_distance() * 1.2);
-
 }
 
 void SceneManager::update(float elapsed)
@@ -87,6 +90,21 @@ void SceneManager::draw(sf::RenderTarget& target)
     for (auto scene : scenes) {
 		scene->draw(target, tr);
 	}
+
+	std::string status_text = "Ship accel: " + distance_to_string(ship_accel_, 0) + "/s - "
+						      "Elapsed time: " +time_to_string(simulation_.date()) + " - "
+						      "Simu x" + std::to_string(simu_speed_);
+
+	if (not simu_running_) {
+		status_text += " (Paused)";
+	}
+	sf::Text status_bar(status_text, GrFonts().info, tr.height_to_res(13));
+	status_bar.setPosition(0, target.getSize().y - status_bar.getLocalBounds().height);
+	sf::RectangleShape rect(sf::Vector2f(target.getSize().x, status_bar.getLocalBounds().height));
+	rect.setPosition(status_bar.getPosition());
+	rect.setFillColor(sf::Color(0x00000080));
+	target.draw(rect);
+	target.draw(status_bar);
 }
 
 void SceneManager::handle_window_resize(int w, int h)
