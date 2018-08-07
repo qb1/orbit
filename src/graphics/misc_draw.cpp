@@ -39,6 +39,7 @@ std::pair<double, double> find_scale_distance(const GrTransform& tr)
 
 void draw_orbit(sf::RenderTarget& target, const GrTransform& tr, const SimObject& prim_sim, const SimObject& sec_sim, sf::Color color, int point_nb)
 {
+	color -= sf::Color(0x40404000);
 	auto orbit = compute_orbit_from_state(prim_sim.position(), prim_sim.velocity(), prim_sim.mass(), sec_sim.position(), sec_sim.velocity());
 	auto points = screen_orbit_points(prim_sim.position(), orbit, point_nb, tr);
 	std::vector<sf::Vertex> lines;

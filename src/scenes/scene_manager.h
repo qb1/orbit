@@ -12,6 +12,7 @@
 #include "object_link.h"
 #include "universe.h"
 #include "center_on.h"
+#include "ship_orbit_parameters.h"
 
 class SceneManager
 {
@@ -32,6 +33,7 @@ public:
 private:
 	SceneUniverse scene_universe_;
 	SceneCenterOn scene_center_on_;
+	ShipOrbitParameters scene_ship_orbit_parameters_;
 	std::vector<SceneBase*> scenes_;
 
 

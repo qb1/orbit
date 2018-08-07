@@ -19,7 +19,8 @@ SceneManager::~SceneManager() = default;
 SceneManager::SceneManager(const sf::RenderTarget& target)
   : scene_universe_(&objects_links_)
   , scene_center_on_(&objects_links_, &camera_)
-  , scenes_({ &scene_universe_, &scene_center_on_ })
+  , scene_ship_orbit_parameters_(&objects_links_)
+  , scenes_({ &scene_universe_, &scene_center_on_, &scene_ship_orbit_parameters_ })
   , camera_(target.getSize().x, target.getSize().y)
   , ship_accel_(0.0)
   , simu_running_(false)
@@ -53,6 +54,7 @@ SceneManager::SceneManager(const sf::RenderTarget& target)
 	visus_.push_back(std::move(ship_visu));
 
 	scene_center_on_.center_camera_on("Ship");
+	scene_ship_orbit_parameters_.set_ship("Ship");
 }
 
 void SceneManager::update(float elapsed)
@@ -63,12 +65,16 @@ void SceneManager::update(float elapsed)
 	ship_simu_->second.set_inherent_acceleration(acc);
 
 	if (simu_running_) {
-		int speed = std::min(simu_speed_, 600);
-		for (int i=0; i < simu_speed_; i += speed) {
-			simulation_.step(1.0 / 60.0 * speed);
-		}
-		for (int i=0; i < simu_speed_ % 600; i++) {
-			simulation_.step(1.0 / 60.0);
+		float total_time = elapsed * static_cast<float>(simu_speed_);
+		float max_step = 10.0f;
+		if (total_time < max_step) {
+			simulation_.step(total_time);
+		} else {
+			float i = 0.0f;
+			for (; i < total_time - max_step; i += max_step) {
+				simulation_.step(max_step);
+			}
+			simulation_.step(total_time - i);
 		}
 	}
 
@@ -152,7 +158,7 @@ void SceneManager::handle_key(bool pressed, const sf::Event::KeyEvent& event)
 			default:
 				break;
 		}
-		simu_speed_ = std::min(simu_speed_, 1024 * 1024);
+		simu_speed_ = std::min(simu_speed_, 1024 * 256);
 		simu_speed_ = std::max(simu_speed_, 1);
 
 		ship_accel_ = std::min(ship_accel_, 30.0);
