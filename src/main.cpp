@@ -73,9 +73,9 @@ int main()
 		}
 
 		// Update
-		ImGui::SFML::Update(window, deltaClock.restart());
-		float elapsed = deltaClock.getElapsedTime().asSeconds();
-		scene_manager.update(elapsed);
+		auto elapsed = deltaClock.restart();
+		ImGui::SFML::Update(window, elapsed);
+		scene_manager.update(elapsed.asSeconds());
 
 		// Render
 		scene_manager.draw(window);
