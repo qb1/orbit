@@ -18,7 +18,7 @@ SceneManager::~SceneManager() = default;
 
 SceneManager::SceneManager(const sf::RenderTarget& target)
   : scene_universe_(&objects_links_)
-  , scene_center_on_(&objects_links_, &camera_)
+  , scene_center_on_(&objects_links_, &camera_, &simu_speed_)
   , scene_ship_orbit_parameters_(&objects_links_)
   , scenes_({ &scene_universe_, &scene_center_on_, &scene_ship_orbit_parameters_ })
   , camera_(target.getSize().x, target.getSize().y)
@@ -158,8 +158,6 @@ void SceneManager::handle_key(bool pressed, const sf::Event::KeyEvent& event)
 			default:
 				break;
 		}
-		simu_speed_ = std::min(simu_speed_, 1024 * 256);
-		simu_speed_ = std::max(simu_speed_, 1);
 
 		ship_accel_ = std::min(ship_accel_, 30.0);
 		ship_accel_ = std::max(0.0, ship_accel_);

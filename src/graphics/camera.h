@@ -42,10 +42,10 @@ public:
 	}
 
 	glm::dvec2 origin;
+	glm::dvec2 position;
 	double scale;
 
 protected:
 	int window_width_;
 	int window_height_;
-	glm::dvec2 position;
 };

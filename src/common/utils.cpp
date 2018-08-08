@@ -19,18 +19,17 @@ std::string distance_to_string(double distance, int precision)
 
 	s << std::defaultfloat;
 
-	if (distance < 0.5) {
+	auto abs = std::abs(distance);
+
+	if (abs < 0.5) {
 		distance = 0;
 		unit = "m";
-	} else if (distance < 1.0) {
-		unit = "cm";
-		distance *= 100.0;
-	} else if (distance < 1.0e3) {
+	} else if (abs < 1.0e3) {
 		unit = "m";
-	} else if (distance < 1.0e9) {
+	} else if (abs < 1.0e9) {
 		unit = "km";
 		distance /= 1.0e3;
-	// } else if (distance < 1.0e9) {
+	// } else if (abs < 1.0e9) {
 	// 	unit = "Kkm";
 	// 	distance /= 1.0e6;
 	} else if (distance < 1.0e12) {

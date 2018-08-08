@@ -7,10 +7,11 @@
 #include <glm/gtx/vector_angle.hpp>
 #include <glm/detail/func_geometric.hpp>
 
+constexpr double G = 6.67408e-11;
+
 OrbitalParameters compute_orbit_from_state(const glm::dvec2& prim_pos, const glm::dvec2& prim_vel, double prim_mass,
                                            glm::dvec2 sat_pos, glm::dvec2 sat_vel)
 {
-	constexpr double G = 6.67408e-11;
 	sat_pos -= prim_pos;
 	sat_vel -= prim_vel;
 	auto sat_pos_dir = glm::normalize(sat_pos);
@@ -61,6 +62,29 @@ OrbitalParameters compute_orbit_from_state(const glm::dvec2& prim_pos, const glm
 	orbit.longitude = glm::orientedAngle(glm::dvec2(1.0, 0.0), sat_pos_dir) - nu;
 
 	return orbit;
+}
+
+glm::dvec2 acceleration_from_attraction(const glm::dvec2& prim_pos, double prim_mass, const glm::dvec2& sat_pos)
+{
+	auto distance = sat_pos - prim_pos;
+	double r = glm::length(distance);
+	auto direction = glm::normalize(distance);
+
+	double accel = G * prim_mass / (r * r);
+	return glm::rotate(direction, glm::pi<double>()) * accel;
+}
+
+glm::dvec2 velocity_for_circular_orbit(const glm::dvec2& prim_pos, const glm::dvec2& prim_vel, double prim_mass,
+                                       glm::dvec2 sat_pos)
+{
+	auto distance = sat_pos - prim_pos;
+	double r = glm::length(distance);
+	auto direction = glm::normalize(distance);
+
+	double speed = glm::sqrt(G * prim_mass / r);
+	auto velocity = glm::rotate(direction, - glm::half_pi<double>()) * speed;
+
+	return velocity + prim_vel;
 }
 
 glm::dvec2 compute_barycenter(glm::dvec2 a, double mass_a, glm::dvec2 b, double mass_b)

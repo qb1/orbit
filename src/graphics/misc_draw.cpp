@@ -97,9 +97,10 @@ void draw_grid(sf::RenderTarget& target, const GrTransform& tr, const glm::dvec2
 	target.draw(lines.data(), lines.size(), sf::Lines);
 }
 
-void draw_screen_arrow(sf::RenderTarget& target, const sf::Color& color, glm::dvec2 origin, glm::dvec2 direction, double length, double arrow_end_size)
+void draw_screen_arrow(sf::RenderTarget& target, const sf::Color& color, glm::dvec2 origin, glm::dvec2 vector, double arrow_end_size)
 {
-	length = std::max(arrow_end_size, length);
+	auto direction = glm::normalize(vector);
+	auto length = std::max(arrow_end_size, glm::length(vector));
 	auto line_end = origin + direction * (length - arrow_end_size);
 	sf::Vertex lines[] = { to_vertex(origin), to_vertex(line_end) };
 	target.draw(lines, sizeof(lines) / sizeof(lines[0]), sf::Lines);
