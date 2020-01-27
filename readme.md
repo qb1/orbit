@@ -2,6 +2,12 @@
 
 This project is a crude sandbox environment to play around with gravity simulation & 2-body orbit predictions algorithms.
 
+The UI showing the a few planets and the controllable ship:
+![Inner planets](screenshots/inner_planets.png)
+
+Trying to get to the moon via Hohmann transfer orbit:
+![Simple orbit prediction](screenshots/simple_orbit.png)
+
 # TODO
 - add prediction:
    - display current object's path
