@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <memory>
 #include <vector>
+#include <string>
 
 #include <glm/vec2.hpp>
 
@@ -13,6 +14,7 @@
 #include "universe.h"
 #include "center_on.h"
 #include "ship_orbit_parameters.h"
+#include "orbit_prediction.h"
 
 class SceneManager
 {
@@ -30,10 +32,14 @@ public:
 	virtual void handle_mouse_move(const sf::Event::MouseMoveEvent& event);
 	virtual void handle_mouse_wheel(const sf::Event::MouseWheelScrollEvent& event);
 
+	void save(std::string filename);
+	void load(std::string filename);
+
 private:
 	SceneUniverse scene_universe_;
 	SceneCenterOn scene_center_on_;
 	ShipOrbitParameters scene_ship_orbit_parameters_;
+	OrbitPrediction scene_ship_orbit_prediction_;
 	std::vector<SceneBase*> scenes_;
 
 

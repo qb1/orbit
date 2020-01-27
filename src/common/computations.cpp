@@ -97,3 +97,98 @@ glm::dvec2 compute_barycenter(glm::dvec2 a, double mass_a, glm::dvec2 b, double 
 	double r = distance / (1 + mass_a / mass_b);
 	return a_to_b * r;
 }
+
+// #include <imgui.h>
+
+std::optional<double> compute_dt_from_true_anomaly(const OrbitalParameters& orbit, double prim_mass, double angle_start,
+                                                   double angle_end)
+{
+	if (orbit.e == 1)
+		return std::nullopt;
+
+	double a = orbit.rp / (1.0 - orbit.e);
+	double n = glm::sqrt((G * prim_mass) / glm::pow(a, 3));
+
+	double E0 = glm::acos((orbit.e + glm::cos(angle_start)) / (1 + orbit.e * glm::cos(angle_start)));
+	if (angle_start > glm::pi<double>())
+		E0 = glm::two_pi<double>() - E0;
+	// ImGui::LabelText("E0", "%f", E0);
+	double E = glm::acos((orbit.e + glm::cos(angle_end)) / (1 + orbit.e * glm::cos(angle_end)));
+	if (angle_end > glm::pi<double>())
+		E = glm::two_pi<double>() - E;
+	// ImGui::LabelText("E", "%f", E);
+
+	// Assume counter-clockwise orbit.
+	// TODO: add orientation in OrbitalParameters
+	if(E - E0 > 0.0) {
+		E -= glm::two_pi<double>();
+	}
+
+	double M0 = E0 - orbit.e * glm::sin(E0);
+	double M = E - orbit.e * glm::sin(E);
+
+	double dt = glm::abs((M - M0) / n);
+
+	return dt;
+}
+
+double compute_true_anomaly_from_dt(const OrbitalParameters& orbit, double prim_mass, double angle_start, double dt)
+{
+	// Assume counter-clockwise
+	dt = -dt;
+
+	double a = orbit.rp / (1.0 - orbit.e);
+	double n = glm::sqrt((G * prim_mass) / glm::pow(a, 3));
+	double E0 = glm::acos((orbit.e + glm::cos(angle_start)) / (1 + orbit.e * glm::cos(angle_start)));
+	if (angle_start > glm::pi<double>())
+		E0 = glm::two_pi<double>() - E0;
+	double M0 = E0 - orbit.e * glm::sin(E0);
+
+	double M = dt * n + M0;
+
+	// Newton iteration method
+    double precision = 10e-5; // Seems good enough for solar system, may need more formal verification
+    double delta = precision;
+    double E = M; // First guess
+    for(int i = 0; i < 10000 && glm::abs(delta) >= precision; ++i) {
+    	delta = E - orbit.e * glm::sin(E) - M;
+    	E = E - delta  / (1 - orbit.e * glm::cos(E));
+    }
+
+    double tan_half_v = glm::sqrt((1 + orbit.e) / (1 - orbit.e)) * glm::tan(E / 2);
+    double v = glm::atan(tan_half_v) * 2;
+
+    if (v < 0)
+    	v += glm::two_pi<double>();
+
+	return v;
+}
+
+double angle_from_primary(const glm::dvec2 prim_pos, const glm::dvec2 point)
+{
+	auto dir = glm::normalize(point - prim_pos);
+
+	// glm::orientedAngle's orientation seems to be a bit imprecise, since we're a simple case let's deduce the
+	// orientation ourselves
+	auto angle = glm::angle(glm::dvec2(1.0, 0.0), dir);
+	if (dir.y < 0)
+		angle = glm::two_pi<double>() - angle;
+
+	return angle;
+}
+
+double true_anomaly_from_primary(const OrbitalParameters& orbit, const glm::dvec2 prim_pos, const glm::dvec2 point)
+{
+	double angle = angle_from_primary(prim_pos, point) - orbit.longitude;
+	if (angle < 0)
+		angle += glm::two_pi<double>();
+	if (angle >= glm::two_pi<double>())
+		angle -= glm::two_pi<double>();
+	return angle;
+}
+
+double flight_path_angle(const OrbitalParameters& orbit, double true_anomaly)
+{
+	double tan_angle = orbit.e * glm::sin(true_anomaly) / (1 + orbit.e * glm::cos(true_anomaly));
+	return glm::atan(tan_angle);
+}

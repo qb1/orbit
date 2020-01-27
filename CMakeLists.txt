@@ -31,6 +31,7 @@ add_executable(orbit
 
 	src/scenes/scene_manager.cpp
 	src/scenes/universe.cpp
+	src/scenes/utils.cpp
 
 	${IMGUI_SOURCES} ${IMGUI_SFML_SOURCES}
 )

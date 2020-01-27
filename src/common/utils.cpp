@@ -5,6 +5,7 @@
 #include <iomanip>
 
 #include <glm/detail/func_geometric.hpp>
+#include <glm/gtc/constants.hpp>
 
 double linear_space(double min, double max, int step_count, int step)
 {
@@ -70,4 +71,9 @@ std::string time_to_string(std::uint64_t seconds)
 	ss.fill('0');
 	ss << std::setw(2) << hours << ":" << std::setw(2) << minutes << ":" << std::setw(2) << seconds;
 	return ss.str();
+}
+
+double to_degrees(double angle)
+{
+	return angle / glm::two_pi<double>() * 360.0;
 }

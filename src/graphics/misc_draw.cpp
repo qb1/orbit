@@ -41,7 +41,12 @@ void draw_orbit(sf::RenderTarget& target, const GrTransform& tr, const SimObject
 {
 	color -= sf::Color(0x40404000);
 	auto orbit = compute_orbit_from_state(prim_sim.position(), prim_sim.velocity(), prim_sim.mass(), sec_sim.position(), sec_sim.velocity());
-	auto points = screen_orbit_points(prim_sim.position(), orbit, point_nb, tr);
+	draw_orbit(target, tr, prim_sim.position(), orbit, color, point_nb);
+}
+
+void draw_orbit(sf::RenderTarget& target, const GrTransform& tr, const glm::dvec2& prim_pos, const OrbitalParameters& orbit, sf::Color color, int point_nb)
+{
+	auto points = screen_orbit_points(prim_pos, orbit, point_nb, tr);
 	std::vector<sf::Vertex> lines;
 	color.a = 200;
 	for (const auto& p : points) {

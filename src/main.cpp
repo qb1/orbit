@@ -15,7 +15,7 @@ using namespace std;
 int main()
 {
 	sf::ContextSettings settings;
-	settings.antialiasingLevel = 4;
+	// settings.antialiasingLevel = 4;
 	sf::RenderWindow window(sf::VideoMode(1024, 768), "Orbit", sf::Style::Default, settings);
 	window.setFramerateLimit(60);
 
@@ -39,6 +39,13 @@ int main()
 				window.close();
 			if (event.type == sf::Event::KeyPressed and event.key.code == sf::Keyboard::Key::Escape)
 				window.close();
+
+			if (event.type == sf::Event::KeyPressed and event.key.code == sf::Keyboard::Key::L)
+				scene_manager.load("save.orb");
+
+			if (event.type == sf::Event::KeyPressed and event.key.code == sf::Keyboard::Key::S)
+				scene_manager.save("save.orb");
+
 			if (event.type == sf::Event::Resized) {
 				// Ensure view is not stretched
 				auto view = window.getView();
@@ -52,12 +59,14 @@ int main()
 				if (event.type == sf::Event::MouseWheelScrolled) {
 					scene_manager.handle_mouse_wheel(event.mouseWheelScroll);
 				}
-				if (event.type == sf::Event::MouseMoved) {
-					scene_manager.handle_mouse_move(event.mouseMove);
-				}
 				if (event.type == sf::Event::MouseButtonPressed or event.type == sf::Event::MouseButtonReleased) {
 					scene_manager.handle_click(event.type == sf::Event::MouseButtonPressed, event.mouseButton);
 				}
+			}
+
+			// Keep window move transparent
+			if (event.type == sf::Event::MouseMoved) {
+				scene_manager.handle_mouse_move(event.mouseMove);
 			}
 
 			if (not ImGui::GetIO().WantCaptureKeyboard) {

@@ -21,3 +21,6 @@ double linear_space(double min, double max, int step_count, int step);
 
 std::string distance_to_string(double distance, int precision = 2);
 std::string time_to_string(std::uint64_t seconds);
+double to_degrees(double angle);
+
+constexpr double grav_const = 6.67408e-11;

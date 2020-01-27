@@ -86,14 +86,8 @@ std::vector<glm::dvec2> circle_points(glm::dvec2 center, double radius, double a
 	return points;
 }
 
-// Clock-wise
-std::vector<glm::dvec2> orbit_points(const glm::dvec2& focal_point, const OrbitalParameters& orbit, double angle_start, double angle_end, int points_nb)
+double semi_latus_rectum(const OrbitalParameters& orbit)
 {
-	std::vector<glm::dvec2> points;
-
-	angle_start -= orbit.longitude;
-	angle_end -= orbit.longitude;
-
 	// Compute the semi-latus rectum depending on orbit type
 	double p;
 	if (orbit.e == 1.0) {
@@ -103,6 +97,19 @@ std::vector<glm::dvec2> orbit_points(const glm::dvec2& focal_point, const Orbita
 		double a = orbit.rp / (1 - orbit.e);
 		p = a * (1 - glm::pow(orbit.e, 2));
 	}
+	return p;
+}
+
+// Clock-wise
+std::vector<glm::dvec2> orbit_points(const glm::dvec2& focal_point, const OrbitalParameters& orbit, double angle_start, double angle_end, int points_nb)
+{
+	std::vector<glm::dvec2> points;
+
+	angle_start -= orbit.longitude;
+	angle_end -= orbit.longitude;
+
+	// Compute the semi-latus rectum depending on orbit type
+	double p = semi_latus_rectum(orbit);
 
 	// Restrict drawing to valid angles.
 	if(orbit.e == 1) {
@@ -122,6 +129,27 @@ std::vector<glm::dvec2> orbit_points(const glm::dvec2& focal_point, const Orbita
 		points.push_back(point + focal_point);
 	}
 	return points;
+}
+
+glm::dvec2 orbit_point(const glm::dvec2& focal_point, const OrbitalParameters& orbit, double angle)
+{
+	std::vector<glm::dvec2> points;
+
+	angle -= orbit.longitude;
+
+	// Compute the semi-latus rectum depending on orbit type
+	double p = semi_latus_rectum(orbit);
+
+	double radius = p / (1 + orbit.e * glm::cos(angle));
+	glm::dvec2 point(glm::cos(angle + orbit.longitude) * radius, glm::sin(angle + orbit.longitude) * radius);
+	return focal_point + point;
+}
+
+double orbit_radius(const OrbitalParameters& orbit, double true_anomaly)
+{
+	double p = semi_latus_rectum(orbit);
+	double radius = p / (1 + orbit.e * glm::cos(true_anomaly));
+	return radius;
 }
 
 std::vector<glm::dvec2> screen_orbit_points(

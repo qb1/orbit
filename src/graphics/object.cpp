@@ -136,6 +136,9 @@ GrPlanet::~GrPlanet() = default;
 
 void GrPlanet::do_draw(sf::RenderTarget& target, const GrTransform& tr) const
 {
+	if (outside_view(target, tr))
+		return;
+
 	auto scr_pos = tr.to_screen(position_);
 	auto scr_radius = tr.to_screen(radius_);
 

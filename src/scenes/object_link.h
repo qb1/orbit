@@ -16,6 +16,7 @@ public:
 		GrObject& visu() { return *visu_; }
 
 		const SimObject* primary_simu() const { return primary_simu_ ? &primary_simu_.value()->second : nullptr; }
+		const std::string& primary_name() const { return primary_simu_.value()->first; }
 
 		SimUniverse::Collection::const_iterator simu_;
 		std::optional<SimUniverse::Collection::const_iterator> primary_simu_;
@@ -24,6 +25,9 @@ public:
 
 	auto begin() { return object_links_.begin(); }
 	auto end() { return object_links_.end(); }
+
+	auto begin() const { return object_links_.begin(); }
+	auto end() const { return object_links_.end(); }
 
 	auto cbegin() const { return object_links_.cbegin(); }
 	auto cend() const { return object_links_.cend(); }
@@ -53,6 +57,10 @@ public:
 		}
 		throw std::runtime_error("Cannot find matching ObjectLink for name " + name);
 	}
+
+	auto size() { return object_links_.size(); }
+
+	void clear() { object_links_.clear(); }
 
 private:
 	std::vector<ObjectLink> object_links_;

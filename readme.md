@@ -1,7 +1,8 @@
-# Orbrit
+# Orbit
+
+This project is a crude sandbox environment to play around with gravity simulation & 2-body orbit predictions algorithms.
 
 # TODO
-- add control on simulation speed
 - add prediction:
    - display current object's path
    - display other objects final position
@@ -27,5 +28,6 @@ About orbits and predicted path
 
 - http://www.braeunig.us/space/orbmech.htm
 - https://en.wikipedia.org/wiki/Semi-major_and_semi-minor_axes
+- http://www.stargazing.net/kepler/kepler.html#twig03 for solving kepler's equation
 - Numerical integration seems to hold up to a 10s time step. At 100s, the moon escapes the earth's orbit.
-- The sun attracts the moon twice as much as the earth does, so the moon is actually orbiting the sun more than it does the earth. Chossing a satellite / primary relationship seems to depend on the desired computation (but a huge eccentricity is a good sign that no orbit is happening).
+- The sun attracts the moon twice as much as the earth does, so the moon is actually orbiting the sun more than it does the earth. Choosing a satellite / primary relationship seems to depend on the desired computation (but a huge eccentricity is a good sign that no orbit is happening).
