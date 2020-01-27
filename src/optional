@@ -1,0 +1,10 @@
+#pragma once
+
+#include <experimental/optional>
+
+namespace std {
+template <typename T>
+using optional = experimental::optional<T>;
+
+constexpr std::experimental::nullopt_t nullopt { std::experimental::nullopt };
+}
